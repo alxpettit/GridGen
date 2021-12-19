@@ -8,6 +8,12 @@ import streamlit as st
 from pydantic import BaseModel
 
 
+# class Point:
+#    x: int = 0
+#    y: int = 0
+#    def __mul__(self, other):
+
+
 class GridSettings(BaseModel):
     bg_color: str
     primary_color: str
@@ -48,11 +54,11 @@ class Grid:
         self.x = self.conf.approx_x - (self.conf.approx_x % self.big_square_spacing_x)
         self.y = self.conf.approx_y - (self.conf.approx_y % self.big_square_spacing_y)
 
-        self.num_of_squares_x = int(self.x/self.conf.spacing_x)
-        self.num_of_squares_y = int(self.y/self.conf.spacing_y)
+        self.num_of_squares_x = int(self.x / self.conf.spacing_x)
+        self.num_of_squares_y = int(self.y / self.conf.spacing_y)
 
-        self.num_of_big_squares_x = int(self.num_of_squares_x/self.conf.big_square_multiple)
-        self.num_of_big_squares_y = int(self.num_of_squares_y/self.conf.big_square_multiple)
+        self.num_of_big_squares_x = int(self.num_of_squares_x / self.conf.big_square_multiple)
+        self.num_of_big_squares_y = int(self.num_of_squares_y / self.conf.big_square_multiple)
 
         self.im = Image.new("RGB", (self.x, self.y), self.conf.bg_color)
         self.draw = ImageDraw.Draw(self.im)
