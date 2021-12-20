@@ -8,37 +8,39 @@ import streamlit as st
 from pydantic import BaseModel
 
 
-class Point:
+class IntPoint:
     x: int
     y: int
 
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        self.x = int(x)
+        self.y = int(y)
 
 
 class GridSettings(BaseModel):
     bg_color: str
-    primary_color: str
-    secondary_color: str
-    approx_dims: Point
-    spacing: Point
-    line_width_primary: int
-    line_width_secondary: int
+    grid1_color: str
+    grid2_color: str
+    approx_dims: IntPoint
+    spacing: IntPoint
+    grid1_line_width: int
+    grid2_line_width: int
     grid_ratio: int
 
     @classmethod
     def from_gui(cls):
-        approximate_dimensions = Point(st.number_input('Approx X', value=1024), st.number_input('Approx Y', value=768))
-        spacing = Point(st.number_input('X spacing', value=100), st.number_input('Y spacing', value=100))
+        approximate_dimensions = IntPoint(st.number_input('Approx X', value=1024),
+                                          st.number_input('Approx Y', value=768))
+        spacing = IntPoint(st.number_input('X spacing', value=100),
+                           st.number_input('Y spacing', value=100))
         return cls(
             bg_color=st.color_picker('Background color', '#FFFFFF'),
-            primary_color=st.color_picker('Primary grid color', '#000000'),
-            secondary_color=st.color_picker('Secondary grid color', '#555555'),
+            grid1_color=st.color_picker('Primary grid color', '#000000'),
+            grid2_color=st.color_picker('Secondary grid color', '#555555'),
             spacing=spacing,
             approx_dims=approximate_dimensions,
-            line_width_primary=st.number_input('Line width, primary', value=3),
-            line_width_secondary=st.number_input('Line width, secondary', value=1),
+            grid1_line_width=st.number_input('Line width, primary', value=3),
+            grid2_line_width=st.number_input('Line width, secondary', value=1),
             grid_ratio=st.number_input('Length of large square, in small squares', value=2)
         )
 
@@ -54,38 +56,38 @@ class DrawGrids:
         # FYI I know this is horrible but I was rushing and didn't want to implement a proper Point class.
 
         # Calculate amount of spacing to put between the lines on the primary grid (grid1)
-        self.spacing_grid1_x = self.conf.spacing.x * self.conf.grid_ratio
-        self.spacing_grid1_y = self.conf.spacing.y * self.conf.grid_ratio
+        self.spacing_grid1 = IntPoint(self.conf.spacing.x * self.conf.grid_ratio,
+                                      self.conf.spacing.y * self.conf.grid_ratio)
+        self.size = IntPoint(self.conf.approx_dims.x - (self.conf.approx_dims.x % self.spacing_grid1.x),
+                             self.conf.approx_dims.y - (self.conf.approx_dims.y % self.spacing_grid1.y))
+        self.num_squares = IntPoint(self.size.x / self.conf.spacing.x, self.size.y / self.conf.spacing.y)
+        self.square_num_grid1 = IntPoint(self.num_squares.x / self.conf.grid_ratio,
+                                         self.num_squares.y / self.conf.grid_ratio)
 
-        self.x = self.conf.approx_dims.x - (self.conf.approx_dims.x % self.spacing_grid1_x)
-        self.y = self.conf.approx_dims.y - (self.conf.approx_dims.y % self.spacing_grid1_y)
-
-        self.num_squares_x = int(self.x / self.conf.spacing.x)
-        self.num_squares_y = int(self.y / self.conf.spacing.y)
-
-        self.square_num_grid1_x = int(self.num_squares_x / self.conf.grid_ratio)
-        self.square_num_grid1_y = int(self.num_squares_y / self.conf.grid_ratio)
-
-        self.im = Image.new("RGB", (self.x, self.y), self.conf.bg_color)
+        self.im = Image.new("RGB", (self.size.x, self.size.y), self.conf.bg_color)
         self.canvas = ImageDraw.Draw(self.im)
+
+    def draw_grid(self, num_squares: IntPoint, spacing: IntPoint, grid_color: str, grid_line_width: int):
+        for x in range(1, num_squares.x):
+            x *= spacing.x
+            self.canvas.line((x, 0, x, self.size.x), fill=grid_color, width=grid_line_width)
+        for y in range(1, num_squares.y):
+            y *= spacing.y
+            self.canvas.line((0, y, self.size.x, y), fill=grid_color, width=grid_line_width)
 
     def draw_grid2(self):
         """ The secondary grid is the small, usually lighter colored grid intended to measure smaller units. """
-        for i in range(1, self.num_squares_y):
-            i *= self.conf.spacing.y
-            self.canvas.line((0, i, self.x, i), fill=self.conf.secondary_color, width=self.conf.line_width_secondary)
-        for i in range(1, self.num_squares_x):
-            i *= self.conf.spacing.x
-            self.canvas.line((i, 0, i, self.y), fill=self.conf.secondary_color, width=self.conf.line_width_secondary)
+        self.draw_grid(num_squares=self.num_squares,
+                       spacing=self.conf.spacing,
+                       grid_color=self.conf.grid2_color,
+                       grid_line_width=self.conf.grid2_line_width)
 
     def draw_grid1(self):
         """ The primary grid is the larger, usually darker colored grid intended to measure larger units. """
-        for i in range(1, self.square_num_grid1_y):
-            i *= self.spacing_grid1_y
-            self.canvas.line((0, i, self.x, i), fill=self.conf.primary_color, width=self.conf.line_width_primary)
-        for i in range(1, self.square_num_grid1_x):
-            i *= self.spacing_grid1_x
-            self.canvas.line((i, 0, i, self.y), fill=self.conf.primary_color, width=self.conf.line_width_primary)
+        self.draw_grid(num_squares=self.square_num_grid1,
+                       spacing=self.spacing_grid1,
+                       grid_color=self.conf.grid1_color,
+                       grid_line_width=self.conf.grid1_line_width)
 
     def draw(self):
         # draw order is important -- we want to make sure primary grid shows up on top, so we draw it last
