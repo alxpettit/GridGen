@@ -35,12 +35,12 @@ class GridSettings(BaseModel):
                            st.number_input('Y spacing', value=100))
         return cls(
             bg_color=st.color_picker('Background color', '#FFFFFF'),
-            grid1_color=st.color_picker('Primary grid color', '#000000'),
-            grid2_color=st.color_picker('Secondary grid color', '#555555'),
+            grid1_color=st.color_picker('Primary (large) grid color', '#000000'),
+            grid2_color=st.color_picker('Secondary (small) grid color', '#555555'),
             spacing=spacing,
             approx_dims=approximate_dimensions,
-            grid1_line_width=st.number_input('Line width, primary', value=3),
-            grid2_line_width=st.number_input('Line width, secondary', value=1),
+            grid1_line_width=st.number_input('Line width, primary (large) grid', value=3),
+            grid2_line_width=st.number_input('Line width, secondary (small) grid', value=1),
             grid_ratio=st.number_input('Length of large square, in small squares', value=2)
         )
 
@@ -53,7 +53,6 @@ class DrawGrids:
 
     def __init__(self, conf: GridSettings):
         self.conf = conf
-        # FYI I know this is horrible but I was rushing and didn't want to implement a proper Point class.
 
         # Calculate amount of spacing to put between the lines on the primary grid (grid1)
         self.spacing_grid1 = IntPoint(self.conf.spacing.x * self.conf.grid_ratio,
