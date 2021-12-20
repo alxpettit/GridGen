@@ -8,12 +8,17 @@ import streamlit as st
 from pydantic import BaseModel
 
 
+class Point:
+    x: int
+    y: int 
+
+
 class GridSettings(BaseModel):
     bg_color: str
     primary_color: str
     secondary_color: str
-    approx_x: int
-    approx_y: int
+    approx_dims_x: int
+    approx_dims_y: int
     spacing_x: int
     spacing_y: int
     line_width_primary: int
@@ -28,8 +33,8 @@ class GridSettings(BaseModel):
             secondary_color=st.color_picker('Secondary grid color', '#555555'),
             spacing_x=st.number_input('X spacing', value=100),
             spacing_y=st.number_input('Y spacing', value=100),
-            approx_x=st.number_input('Approx X', value=1024),
-            approx_y=st.number_input('Approx Y', value=768),
+            approx_dims_x=st.number_input('Approx X', value=1024),
+            approx_dims_y=st.number_input('Approx Y', value=768),
             line_width_primary=st.number_input('Line width, primary', value=3),
             line_width_secondary=st.number_input('Line width, secondary', value=1),
             grid_ratio=st.number_input('Length of large square, in small squares', value=2)
@@ -47,8 +52,8 @@ class DrawGrids:
         self.spacing_grid1_x = self.conf.spacing_x * self.conf.grid_ratio
         self.spacing_grid1_y = self.conf.spacing_y * self.conf.grid_ratio
 
-        self.x = self.conf.approx_x - (self.conf.approx_x % self.spacing_grid1_x)
-        self.y = self.conf.approx_y - (self.conf.approx_y % self.spacing_grid1_y)
+        self.x = self.conf.approx_dims_x - (self.conf.approx_dims_x % self.spacing_grid1_x)
+        self.y = self.conf.approx_dims_y - (self.conf.approx_dims_y % self.spacing_grid1_y)
 
         self.num_squares_x = int(self.x / self.conf.spacing_x)
         self.num_squares_y = int(self.y / self.conf.spacing_y)
